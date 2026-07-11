@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#16302B">
+<title>مندوب الأدوية</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="مندوب الأدوية">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800&family=Tajawal:wght@400;500;700&display=swap');
+  :root{
+    --ink:#16302B; --paper:#F3F5F0; --card:#FFFFFF; --border:#E4E0D3;
+    --teal:#3C7A6E; --teal-bg:#E7EFEA; --amber:#B47A1E; --amber-bg:#FCF1DE;
+    --red:#C0472E; --red-bg:#FBE7E2; --muted:#8A9189; --text:#1D2B27; --sub:#5C635E;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Tajawal',sans-serif;background:var(--paper);color:var(--text);}
+  .display{font-family:'Cairo',sans-serif;font-weight:800;}
+  .tabular{font-variant-numeric:tabular-nums;}
+  #app{max-width:480px;margin:0 auto;min-height:100vh;position:relative;padding-bottom:96px;}
+  .topbar{position:sticky;top:0;z-index:20;background:var(--ink);color:var(--paper);padding:20px 16px 16px;border-radius:0 0 18px 18px;box-shadow:0 2px 10px rgba(0,0,0,.08);}
+  .topbar .title{font-size:18px;}
+  .topbar .sub{color:#B9C9C2;font-size:12px;margin-top:2px;}
+  main{padding:16px;}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+  .stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center;}
+  .stat .val{font-size:24px;}
+  .stat .lab{font-size:10px;color:var(--muted);margin-top:4px;line-height:1.3;}
+  .stat.warn .val{color:var(--red);}
+  .section-title{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:700;margin:16px 0 8px;}
+  .row-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+  .badge{font-size:11px;font-weight:700;padding:4px 8px;border-radius:99px;white-space:nowrap;}
+  .empty{text-align:center;color:var(--muted);font-size:13px;padding:36px 0;}
+  .actions-row{display:flex;gap:8px;margin-top:12px;}
+  .btn{border:none;border-radius:12px;padding:12px;font-size:14px;font-weight:700;font-family:'Tajawal',sans-serif;cursor:pointer;}
+  .btn-primary{background:var(--ink);color:#fff;flex:1;display:flex;align-items:center;justify-content:center;gap:6px;}
+  .btn-outline{background:#fff;border:1px solid var(--border);color:var(--ink);flex:1;display:flex;align-items:center;justify-content:center;gap:6px;}
+  .btn-outline-dash{background:#fff;border:1px dashed #B9C9C2;color:var(--ink);width:100%;padding:10px;border-radius:12px;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;gap:6px;}
+  .btn-primary:disabled{opacity:.4;}
+  .bottomnav{position:fixed;bottom:0;left:0;right:0;z-index:30;}
+  .bottomnav-inner{max-width:480px;margin:0 auto;background:#fff;border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:8px 4px;box-shadow:0 -2px 10px rgba(0,0,0,.05);}
+  .navbtn{display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;padding:6px 12px;border-radius:12px;color:var(--muted);font-family:'Tajawal',sans-serif;cursor:pointer;}
+  .navbtn.active{color:var(--ink);}
+  .navbtn .ic{width:34px;height:34px;border-radius:99px;display:flex;align-items:center;justify-content:center;}
+  .navbtn.active .ic{background:var(--teal-bg);}
+  .navbtn .lab{font-size:10px;font-weight:600;}
+  .searchbar{position:relative;margin-bottom:10px;}
+  .searchbar input{width:100%;background:#fff;border:1px solid var(--border);border-radius:12px;padding:10px 34px 10px 12px;font-size:14px;font-family:'Tajawal',sans-serif;}
+  .searchbar svg{position:absolute;right:12px;top:50%;transform:translateY(-50%);}
+  .chipsrow{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin:0 -16px 10px;padding-inline:16px;}
+  .chip{white-space:nowrap;padding:6px 12px;border-radius:99px;font-size:12px;font-weight:700;border:1px solid var(--border);background:#fff;color:var(--sub);cursor:pointer;}
+  .chip.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+  .fab{position:fixed;bottom:96px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;border:none;border-radius:99px;width:56px;height:56px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.22);z-index:30;cursor:pointer;}
+  .sheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,.32);z-index:40;display:flex;align-items:flex-end;justify-content:center;}
+  .sheet{width:100%;max-width:480px;background:#FBFAF6;border-radius:22px 22px 0 0;padding:16px 16px 24px;max-height:85vh;overflow-y:auto;box-shadow:0 -8px 30px rgba(0,0,0,.2);}
+  .sheet-handle{width:40px;height:4px;background:var(--border);border-radius:99px;margin:0 auto 12px;}
+  .sheet-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .sheet-head .t{font-size:16px;}
+  .sheet-close{background:var(--paper);border:none;border-radius:99px;padding:8px;cursor:pointer;display:flex;}
+  .field{margin-bottom:12px;}
+  .field label{font-size:12px;font-weight:700;color:var(--sub);display:block;margin-bottom:4px;}
+  .field input, .field textarea, .field select{width:100%;background:#F8F7F2;border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:'Tajawal',sans-serif;outline:none;}
+  .field input:focus, .field textarea:focus, .field select:focus{border-color:var(--teal);}
+  .chiplist{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
+  .pillopt{padding:5px 11px;border-radius:99px;font-size:12px;border:1px solid var(--border);background:#fff;cursor:pointer;}
+  .pillopt.sel{background:var(--teal-bg);border-color:var(--teal);color:var(--teal);}
+  .pillopt.selDark{background:var(--ink);border-color:var(--ink);color:#fff;}
+  .tag{font-size:10px;background:var(--paper);color:var(--sub);padding:2px 8px;border-radius:99px;}
+  .visitcard{background:#fff;border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden;
+    background-image:repeating-linear-gradient(90deg,transparent,transparent 6px,#D8D3C4 6px,#D8D3C4 12px);
+    background-size:100% 2px;background-position:top;background-repeat:no-repeat;}
+  .visitcard .inner{padding:14px;}
+  .stamp{font-size:9px;font-weight:700;color:var(--teal);background:var(--teal-bg);padding:4px 8px;border-radius:99px;display:inline-flex;align-items:center;gap:3px;transform:rotate(-3deg);}
+  .icon-btn{background:var(--paper);border:none;border-radius:8px;padding:8px;cursor:pointer;display:flex;}
+  .icon-btn.danger{background:var(--red-bg);}
+  .companycard{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;}
+  .prodpill{display:inline-flex;align-items:center;gap:4px;font-size:11px;background:var(--paper);color:var(--sub);padding:5px 6px 5px 11px;border-radius:99px;margin:0 2px 4px 0;}
+  .save-indicator{font-size:10px;color:#B9C9C2;padding:4px 8px;}
+  .offline-badge{display:flex;align-items:center;gap:4px;font-size:10px;background:rgba(201,138,44,.2);color:#E8B25C;padding:4px 8px;border-radius:99px;}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* ---------------- helpers ---------------- */
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+const todayISO = () => new Date().toISOString().slice(0,10);
+const fmtDate = iso => { if(!iso) return ""; const d=new Date(iso+"T00:00:00"); return d.toLocaleDateString("ar-EG",{day:"numeric",month:"short",year:"numeric"}); };
+const daysUntil = iso => { const d=new Date(iso+"T00:00:00"); const t=new Date(todayISO()+"T00:00:00"); return Math.round((d-t)/86400000); };
+const esc = s => (s||"").replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+const STORAGE_KEY = "pharma-rep-data-v1";
+const emptyData = { pharmacies:[], companies:[], products:[], visits:[] };
+
+let state = { data: loadData(), tab:"home", detailId:null, sheet:null, regionFilter:"الكل", query:"" };
+
+function loadData(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw) return { ...emptyData, ...JSON.parse(raw) };
+  }catch(e){ console.warn("تعذر تحميل البيانات المحفوظة", e); }
+  return { ...emptyData };
+}
+let saveState = "idle";
+let saveTimer = null;
+function persist(){
+  if(saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=>{
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.data));
+      saveState = navigator.onLine === false ? "offline" : "idle";
+    }catch(e){ saveState = "offline"; }
+    renderTopbarIndicator();
+  }, 200);
+}
+function update(mutator){ mutator(state.data); persist(); render(); }
+
+/* ---------------- icons (inline svg) ---------------- */
+const ic = {
+  home:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+  building:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M8 10h.01M16 10h.01M8 14h.01M16 14h.01"/></svg>',
+  clipboard:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M9 12h6M9 16h6"/></svg>',
+  pill:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 20.5 3.5 13.5a4.95 4.95 0 1 1 7-7l7 7a4.95 4.95 0 1 1-7 7z"/><path d="M8.5 8.5l7 7"/></svg>',
+  plus:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>',
+  plusBig:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>',
+  x:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+  search:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>',
+  phone:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.902.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.908.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>',
+  map:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.5-7-11a7 7 0 0 1 14 0c0 4.5-7 11-7 11z"/><circle cx="12" cy="10" r="3"/></svg>',
+  chevronLeft:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>',
+  chevronRight:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>',
+  trash:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>',
+  pencil:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg>',
+  check:'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+  calendar:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
+  alert:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>',
+  user:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+  wifioff:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 2 20 20M8.5 16.5a5 5 0 0 1 7 0M5 12.5a10 10 0 0 1 3-2.3M19 12.5a10 10 0 0 0-2.5-2.9M8.5 8.5A10 10 0 0 1 12 8c.7 0 1.4.07 2 .2M12 20h.01"/></svg>',
+};
+
+/* ---------------- render root ---------------- */
+function render(){
+  const app = document.getElementById("app");
+  app.innerHTML = `
+    ${topbar()}
+    <main>${tabContent()}</main>
+    ${bottomNav()}
+    ${state.sheet ? sheetHtml() : ""}
+  `;
+  attachHandlers();
+}
+
+function renderTopbarIndicator(){
+  const el = document.getElementById("save-indicator-slot");
+  if(el) el.outerHTML = saveIndicatorHtml();
+}
+function saveIndicatorHtml(){
+  if(saveState === "offline") return `<span id="save-indicator-slot" class="offline-badge">${ic.wifioff} غير متصل</span>`;
+  return `<span id="save-indicator-slot"></span>`;
+}
+
+function topbar(){
+  const now = new Date();
+  const dayName = now.toLocaleDateString("ar-EG",{weekday:"long"});
+  const dateStr = now.toLocaleDateString("ar-EG",{day:"numeric",month:"long"});
+  return `<div class="topbar">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div class="display title">مندوب الأدوية</div>
+        <div class="sub">${dayName} · ${dateStr}</div>
+      </div>
+      ${saveIndicatorHtml()}
+    </div>
+  </div>`;
+}
+
+function bottomNav(){
+  const items = [
+    {id:"home",label:"الرئيسية",icon:ic.home},
+    {id:"pharmacies",label:"الصيدليات",icon:ic.building},
+    {id:"visits",label:"الزيارات",icon:ic.clipboard},
+    {id:"products",label:"المنتجات",icon:ic.pill},
+  ];
+  return `<div class="bottomnav"><div class="bottomnav-inner">
+    ${items.map(it=>`
+      <button class="navbtn ${state.tab===it.id?'active':''}" data-action="setTab" data-tab="${it.id}">
+        <span class="ic">${it.icon}</span>
+        <span class="lab">${it.label}</span>
+      </button>`).join("")}
+  </div></div>`;
+}
+
+function tabContent(){
+  if(state.tab==="home") return homeTab();
+  if(state.tab==="pharmacies") return pharmaciesTab();
+  if(state.tab==="visits") return visitsTab();
+  if(state.tab==="products") return productsTab();
+  return "";
+}
+
+/* ---------------- HOME ---------------- */
+function homeTab(){
+  const d = state.data;
+  const overdue = d.visits.filter(v=>v.nextFollowUp && daysUntil(v.nextFollowUp)<0).sort((a,b)=>a.nextFollowUp.localeCompare(b.nextFollowUp));
+  const dueToday = d.visits.filter(v=>v.nextFollowUp && daysUntil(v.nextFollowUp)===0);
+  const upcoming = d.visits.filter(v=>v.nextFollowUp && daysUntil(v.nextFollowUp)>0 && daysUntil(v.nextFollowUp)<=7).sort((a,b)=>a.nextFollowUp.localeCompare(b.nextFollowUp));
+  const pharmacyName = id => d.pharmacies.find(p=>p.id===id)?.name || "صيدلية محذوفة";
+  const thisMonth = todayISO().slice(0,7);
+  const visitsThisMonth = d.visits.filter(v=>v.date && v.date.startsWith(thisMonth)).length;
+
+  const followRow = (v, overdueFlag) => {
+    const n = daysUntil(v.nextFollowUp);
+    const bg = overdueFlag ? "var(--red-bg)" : (n===0 ? "var(--amber-bg)" : "var(--teal-bg)");
+    const col = overdueFlag ? "var(--red)" : (n===0 ? "var(--amber)" : "var(--teal)");
+    const label = overdueFlag ? `متأخر ${Math.abs(n)} يوم` : (n===0 ? "اليوم" : `خلال ${n} يوم`);
+    return `<div class="row-card">
+      <div>
+        <div style="font-size:14px;font-weight:700;">${esc(pharmacyName(v.pharmacyId))}</div>
+        ${v.notes ? `<div style="font-size:12px;color:var(--muted);margin-top:2px;">${esc(v.notes)}</div>`:""}
+      </div>
+      <div class="badge" style="background:${bg};color:${col};">${label}</div>
+    </div>`;
+  };
+
+  let html = `<div class="grid3">
+    <div class="stat"><div class="display val">${d.pharmacies.length}</div><div class="lab">صيدلية</div></div>
+    <div class="stat"><div class="display val">${visitsThisMonth}</div><div class="lab">زيارة هذا الشهر</div></div>
+    <div class="stat ${overdue.length>0?'warn':''}"><div class="display val">${overdue.length}</div><div class="lab">متابعة متأخرة</div></div>
+  </div>`;
+
+  if(overdue.length>0 || dueToday.length>0){
+    html += `<div class="section-title" style="color:var(--red);">${ic.alert} تحتاج متابعة الآن</div>`;
+    html += [...overdue, ...dueToday].map(v=>followRow(v, daysUntil(v.nextFollowUp)<0)).join("");
+  }
+  if(upcoming.length>0){
+    html += `<div class="section-title" style="color:var(--teal);">${ic.calendar} الأسبوع الجاي</div>`;
+    html += upcoming.map(v=>followRow(v,false)).join("");
+  }
+  if(overdue.length===0 && dueToday.length===0 && upcoming.length===0){
+    html += `<div class="empty">${ic.calendar}<div style="margin-top:8px;">ماكو متابعات مجدولة قريبة</div></div>`;
+  }
+  html += `<div class="actions-row">
+    <button class="btn btn-primary" data-action="setTab" data-tab="visits">${ic.plus} زيارة جديدة</button>
+    <button class="btn btn-outline" data-action="setTab" data-tab="pharmacies">${ic.plus} صيدلية جديدة</button>
+  </div>`;
+  return html;
+}
+
+/* ---------------- PHARMACIES ---------------- */
+function pharmaciesTab(){
+  const d = state.data;
+  if(state.detailId){
+    const pharm = d.pharmacies.find(p=>p.id===state.detailId);
+    if(!pharm){ state.detailId=null; return pharmaciesTab(); }
+    const visits = d.visits.filter(v=>v.pharmacyId===pharm.id).sort((a,b)=>b.date.localeCompare(a.date));
+    return `
+      <button class="btn-outline" style="border:none;background:none;color:var(--teal);font-weight:700;padding:0;display:flex;align-items:center;gap:4px;margin-bottom:12px;" data-action="closeDetail">${ic.chevronRight} رجوع</button>
+      <div style="background:#fff;border:1px solid var(--border);border-radius:16px;padding:16px;">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;">
+          <div>
+            <div class="display" style="font-size:17px;">${esc(pharm.name)}</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:4px;display:flex;align-items:center;gap:4px;">${ic.map}${esc(pharm.region||"")}</div>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <button class="icon-btn" data-action="editPharmacy" data-id="${pharm.id}">${ic.pencil}</button>
+            <button class="icon-btn danger" data-action="deletePharmacy" data-id="${pharm.id}">${ic.trash}</button>
+          </div>
+        </div>
+        ${(pharm.contactPerson||pharm.phone) ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid #EFEBDE;font-size:14px;">
+          ${pharm.contactPerson?`<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">${ic.user}${esc(pharm.contactPerson)}</div>`:""}
+          ${pharm.phone?`<div style="display:flex;align-items:center;gap:6px;">${ic.phone}${esc(pharm.phone)}</div>`:""}
+        </div>`:""}
+        ${pharm.notes?`<div style="margin-top:8px;font-size:12px;color:var(--muted);">${esc(pharm.notes)}</div>`:""}
+      </div>
+      <div class="section-title">سجل الزيارات (${visits.length})</div>
+      ${visits.length===0 ? `<div class="empty">ماكو زيارات مسجلة بعد</div>` : visits.map(v=>visitCardHtml(v,true)).join("")}
+    `;
+  }
+
+  const regions = ["الكل", ...Array.from(new Set(d.pharmacies.map(p=>p.region).filter(Boolean)))];
+  const filtered = d.pharmacies.filter(p =>
+    (state.regionFilter==="الكل" || p.region===state.regionFilter) &&
+    (p.name.includes(state.query) || (p.contactPerson||"").includes(state.query))
+  );
+
+  return `
+    <div class="searchbar">
+      ${ic.search}
+      <input id="pharmSearch" placeholder="دور على صيدلية أو صيدلاني..." value="${esc(state.query)}">
+    </div>
+    <div class="chipsrow">
+      ${regions.map(r=>`<button class="chip ${state.regionFilter===r?'active':''}" data-action="setRegionFilter" data-region="${esc(r)}">${esc(r)}</button>`).join("")}
+    </div>
+    ${filtered.length===0 ? `<div class="empty">${d.pharmacies.length===0?"ما عندك صيدليات مضافة بعد":"ماكو نتائج"}</div>` : filtered.map(p=>{
+      const lastVisit = d.visits.filter(v=>v.pharmacyId===p.id).sort((a,b)=>b.date.localeCompare(a.date))[0];
+      return `<button class="row-card" style="width:100%;border:1px solid var(--border);text-align:right;cursor:pointer;" data-action="openDetail" data-id="${p.id}">
+        <div>
+          <div style="font-size:14px;font-weight:700;">${esc(p.name)}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px;display:flex;align-items:center;gap:4px;">${ic.map}${esc(p.region||"بدون منطقة")}</div>
+          ${lastVisit?`<div style="font-size:10px;color:#B4AF9E;margin-top:4px;">آخر زيارة: ${fmtDate(lastVisit.date)}</div>`:""}
+        </div>
+        <span style="color:#B4AF9E;">${ic.chevronLeft}</span>
+      </button>`;
+    }).join("")}
+    <button class="fab" data-action="openPharmacyForm">${ic.plusBig}</button>
+  `;
+}
+
+function pharmacyFormHtml(editId){
+  const d = state.data;
+  const pharm = editId ? d.pharmacies.find(p=>p.id===editId) : null;
+  const regions = Array.from(new Set(d.pharmacies.map(p=>p.region).filter(Boolean)));
+  return `
+    <div class="field"><label>اسم الصيدلية *</label><input id="f-name" value="${esc(pharm?.name||"")}" placeholder="مثال: صيدلية الشفاء"></div>
+    <div class="field"><label>المنطقة</label>
+      <div class="chiplist">${regions.map(r=>`<span class="pillopt ${pharm?.region===r?'sel':''}" data-action="pickRegion" data-region="${esc(r)}">${esc(r)}</span>`).join("")}</div>
+      <input id="f-newregion" placeholder="أو اكتب منطقة جديدة" value="${pharm && !regions.includes(pharm.region) ? esc(pharm.region||"") : ""}">
+    </div>
+    <div class="field"><label>الصيدلاني / المسؤول</label><input id="f-contact" value="${esc(pharm?.contactPerson||"")}" placeholder="الاسم"></div>
+    <div class="field"><label>رقم الهاتف</label><input id="f-phone" type="tel" value="${esc(pharm?.phone||"")}" placeholder="07xxxxxxxxx"></div>
+    <div class="field"><label>ملاحظات</label><textarea id="f-notes" rows="2" placeholder="مواعيد الدوام، تفضيلات...">${esc(pharm?.notes||"")}</textarea></div>
+    <button class="btn btn-primary" style="width:100%;" data-action="savePharmacy" data-id="${editId||''}">${pharm?"حفظ التعديلات":"إضافة الصيدلية"}</button>
+  `;
+}
+
+/* ---------------- VISITS ---------------- */
+function visitsTab(){
+  const d = state.data;
+  const visits = [...d.visits].sort((a,b)=>b.date.localeCompare(a.date));
+  return `
+    <button class="btn btn-primary" style="width:100%;" ${d.pharmacies.length===0?'disabled':''} data-action="openVisitForm">${ic.plus} تسجيل زيارة جديدة</button>
+    ${d.pharmacies.length===0?`<div class="empty" style="padding:12px 0;">أضف صيدلية أول قبل تسجيل زيارة</div>`:""}
+    <div style="margin-top:10px;">
+      ${visits.length===0 ? `<div class="empty">ماكو زيارات مسجلة بعد</div>` : visits.map(v=>visitCardHtml(v,false)).join("")}
+    </div>
+  `;
+}
+
+function visitCardHtml(v, compact){
+  const d = state.data;
+  const pharm = d.pharmacies.find(p=>p.id===v.pharmacyId);
+  const products = d.products.filter(pr=>(v.productIds||[]).includes(pr.id));
+  return `<div class="visitcard"><div class="inner">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;">
+      <div>
+        <div style="font-size:14px;font-weight:700;">${esc(pharm?.name||"صيدلية محذوفة")}</div>
+        <div class="tabular" style="font-size:10px;color:var(--muted);margin-top:2px;">${fmtDate(v.date)}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:4px;">
+        <span class="stamp">${ic.check} تمت</span>
+        ${!compact?`<button class="icon-btn" style="background:none;padding:6px;" data-action="deleteVisit" data-id="${v.id}">${ic.trash}</button>`:""}
+      </div>
+    </div>
+    ${products.length>0?`<div style="margin-top:8px;">${products.map(p=>`<span class="prodpill" style="padding:2px 10px;">${esc(p.name)}</span>`).join("")}</div>`:""}
+    ${v.notes?`<div style="font-size:12px;color:var(--sub);margin-top:8px;">${esc(v.notes)}</div>`:""}
+    ${v.nextFollowUp?`<div style="font-size:10px;color:var(--amber);margin-top:8px;display:flex;align-items:center;gap:4px;">${ic.calendar} متابعة: ${fmtDate(v.nextFollowUp)}</div>`:""}
+  </div></div>`;
+}
+
+function visitFormHtml(){
+  const d = state.data;
+  const byCompany = d.companies.map(c=>({company:c, products:d.products.filter(p=>p.companyId===c.id)})).filter(g=>g.products.length>0);
+  return `
+    <div class="field"><label>الصيدلية *</label>
+      <select id="v-pharmacy">${d.pharmacies.map(p=>`<option value="${p.id}">${esc(p.name)} — ${esc(p.region||"")}</option>`).join("")}</select>
+    </div>
+    <div class="field"><label>التاريخ</label><input id="v-date" type="date" class="tabular" value="${todayISO()}"></div>
+    ${byCompany.length>0?`<div class="field"><label>العلاجات المعروضة</label>
+      <div style="max-height:170px;overflow-y:auto;">
+        ${byCompany.map(g=>`
+          <div style="margin-bottom:8px;">
+            <div style="font-size:10px;color:var(--muted);font-weight:700;margin-bottom:4px;">${esc(g.company.name)}</div>
+            <div class="chiplist" style="margin-bottom:0;">
+              ${g.products.map(p=>`<span class="pillopt" data-action="toggleVisitProduct" data-id="${p.id}">${esc(p.name)}</span>`).join("")}
+            </div>
+          </div>`).join("")}
+      </div>
+    </div>`:""}
+    <div class="field"><label>ملاحظات الزيارة</label><textarea id="v-notes" rows="2" placeholder="شنو اتفقتوا، رد فعل الصيدلاني..."></textarea></div>
+    <div class="field"><label>تاريخ المتابعة القادمة (اختياري)</label><input id="v-follow" type="date" class="tabular"></div>
+    <button class="btn btn-primary" style="width:100%;" data-action="saveVisit">حفظ الزيارة</button>
+  `;
+}
+let visitFormSelectedProducts = [];
+
+/* ---------------- PRODUCTS ---------------- */
+function productsTab(){
+  const d = state.data;
+  return `
+    <button class="btn-outline-dash" data-action="openCompanyForm">${ic.plus} شركة جديدة</button>
+    ${d.companies.length===0?`<div class="empty">أضف شركات الأدوية اللي تشتغل وياها</div>`:""}
+    <div style="margin-top:10px;">
+      ${d.companies.map(c=>{
+        const products = d.products.filter(p=>p.companyId===c.id);
+        return `<div class="companycard">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div class="display" style="font-size:14px;">${esc(c.name)}</div>
+            <button class="icon-btn" style="background:none;padding:4px;" data-action="deleteCompany" data-id="${c.id}">${ic.trash}</button>
+          </div>
+          <div style="margin-top:8px;">
+            ${products.map(p=>`<span class="prodpill">${esc(p.name)}<button data-action="deleteProduct" data-id="${p.id}" style="background:none;border:none;cursor:pointer;display:inline-flex;color:var(--muted);">${ic.x}</button></span>`).join("")}
+            <button class="pillopt" style="color:var(--teal);border-style:dashed;border-color:#B9C9C2;" data-action="openProductForm" data-company="${c.id}">+ منتج</button>
+          </div>
+        </div>`;
+      }).join("")}
+    </div>
+  `;
+}
+
+/* ---------------- SHEET (modal) ---------------- */
+function sheetHtml(){
+  let title="", body="";
+  if(state.sheet.type==="pharmacyForm"){ title = state.sheet.id ? "تعديل الصيدلية" : "صيدلية جديدة"; body = pharmacyFormHtml(state.sheet.id); }
+  if(state.sheet.type==="visitForm"){ title = "زيارة جديدة"; body = visitFormHtml(); }
+  if(state.sheet.type==="companyForm"){ title = "شركة جديدة"; body = `
+    <div class="field"><label>اسم الشركة</label><input id="c-name" placeholder="مثال: سانوفي"></div>
+    <button class="btn btn-primary" style="width:100%;" data-action="saveCompany">إضافة</button>`; }
+  if(state.sheet.type==="productForm"){ title = "منتج جديد"; body = `
+    <div class="field"><label>اسم العلاج</label><input id="p-name" placeholder="مثال: أوجمنتين"></div>
+    <div class="field"><label>الفئة العلاجية (اختياري)</label><input id="p-category" placeholder="مثال: مضاد حيوي"></div>
+    <button class="btn btn-primary" style="width:100%;" data-action="saveProduct" data-company="${state.sheet.companyId}">إضافة</button>`; }
+
+  return `<div class="sheet-overlay" data-action="closeSheet" data-overlay="1">
+    <div class="sheet" onclick="event.stopPropagation()">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head"><div class="display t">${title}</div><button class="sheet-close" data-action="closeSheet">${ic.x}</button></div>
+      ${body}
+    </div>
+  </div>`;
+}
+
+/* ---------------- event delegation ---------------- */
+function attachHandlers(){
+  document.querySelectorAll("[data-action]").forEach(el=>{
+    el.addEventListener("click", onAction);
+  });
+  const search = document.getElementById("pharmSearch");
+  if(search){
+    search.addEventListener("input", e=>{ state.query = e.target.value; renderKeepFocus("pharmSearch"); });
+  }
+  const newRegionInput = document.getElementById("f-newregion");
+  if(newRegionInput){
+    newRegionInput.addEventListener("input", ()=>{}); // just let value persist naturally on save
+  }
+}
+
+function renderKeepFocus(id){
+  render();
+  const el = document.getElementById(id);
+  if(el){ el.focus(); el.selectionStart = el.selectionEnd = el.value.length; }
+}
+
+function onAction(e){
+  e.stopPropagation();
+  const el = e.currentTarget;
+  if(el.dataset.overlay && e.target !== el) return; // clicked inside sheet, ignore overlay close
+  const action = el.dataset.action;
+  const d = state.data;
+
+  if(action==="setTab"){ state.tab = el.dataset.tab; state.detailId=null; render(); }
+  else if(action==="openDetail"){ state.detailId = el.dataset.id; render(); }
+  else if(action==="closeDetail"){ state.detailId = null; render(); }
+  else if(action==="setRegionFilter"){ state.regionFilter = el.dataset.region; render(); }
+  else if(action==="openPharmacyForm"){ state.sheet = {type:"pharmacyForm", id:null}; render(); }
+  else if(action==="editPharmacy"){ state.sheet = {type:"pharmacyForm", id:el.dataset.id}; render(); }
+  else if(action==="closeSheet"){ state.sheet = null; visitFormSelectedProducts=[]; render(); }
+  else if(action==="pickRegion"){
+    document.querySelectorAll(".pillopt[data-action='pickRegion']").forEach(p=>p.classList.remove("sel"));
+    el.classList.add("sel");
+    const input = document.getElementById("f-newregion");
+    if(input) input.value = "";
+    el.dataset.picked = "1";
+  }
+  else if(action==="savePharmacy"){
+    const name = document.getElementById("f-name").value.trim();
+    if(!name) return;
+    const pickedChip = document.querySelector(".pillopt.sel[data-action='pickRegion']");
+    const newRegion = document.getElementById("f-newregion").value.trim();
+    const region = newRegion || (pickedChip ? pickedChip.dataset.region : "");
+    const phone = document.getElementById("f-phone").value.trim();
+    const contactPerson = document.getElementById("f-contact").value.trim();
+    const notes = document.getElementById("f-notes").value.trim();
+    const id = el.dataset.id;
+    update(data=>{
+      if(id){
+        const p = data.pharmacies.find(x=>x.id===id);
+        Object.assign(p, {name, region, phone, contactPerson, notes});
+      } else {
+        data.pharmacies.push({id:uid(), name, region, phone, contactPerson, notes});
+      }
+    });
+    state.sheet = null; render();
+  }
+  else if(action==="deletePharmacy"){
+    if(!confirm("تحذف هذه الصيدلية وكل زياراتها المسجلة؟")) return;
+    const id = el.dataset.id;
+    update(data=>{
+      data.pharmacies = data.pharmacies.filter(p=>p.id!==id);
+      data.visits = data.visits.filter(v=>v.pharmacyId!==id);
+    });
+    state.detailId = null; render();
+  }
+  else if(action==="openVisitForm"){ visitFormSelectedProducts=[]; state.sheet={type:"visitForm"}; render(); }
+  else if(action==="toggleVisitProduct"){
+    const id = el.dataset.id;
+    const i = visitFormSelectedProducts.indexOf(id);
+    if(i>-1) visitFormSelectedProducts.splice(i,1); else visitFormSelectedProducts.push(id);
+    el.classList.toggle("selDark");
+  }
+  else if(action==="saveVisit"){
+    const pharmacyId = document.getElementById("v-pharmacy").value;
+    if(!pharmacyId) return;
+    const date = document.getElementById("v-date").value || todayISO();
+    const notes = document.getElementById("v-notes").value.trim();
+    const nextFollowUp = document.getElementById("v-follow").value || null;
+    update(data=>{
+      data.visits.push({id:uid(), pharmacyId, date, productIds:[...visitFormSelectedProducts], notes, nextFollowUp});
+    });
+    visitFormSelectedProducts=[]; state.sheet=null; render();
+  }
+  else if(action==="deleteVisit"){
+    const id = el.dataset.id;
+    update(data=>{ data.visits = data.visits.filter(v=>v.id!==id); });
+  }
+  else if(action==="openCompanyForm"){ state.sheet={type:"companyForm"}; render(); }
+  else if(action==="saveCompany"){
+    const name = document.getElementById("c-name").value.trim();
+    if(!name) return;
+    update(data=>{ data.companies.push({id:uid(), name}); });
+    state.sheet=null; render();
+  }
+  else if(action==="deleteCompany"){
+    if(!confirm("تحذف هذه الشركة وكل منتجاتها؟")) return;
+    const id = el.dataset.id;
+    update(data=>{
+      data.companies = data.companies.filter(c=>c.id!==id);
+      data.products = data.products.filter(p=>p.companyId!==id);
+    });
+  }
+  else if(action==="openProductForm"){ state.sheet={type:"productForm", companyId:el.dataset.company}; render(); }
+  else if(action==="saveProduct"){
+    const name = document.getElementById("p-name").value.trim();
+    const category = document.getElementById("p-category").value.trim();
+    if(!name) return;
+    const companyId = el.dataset.company;
+    update(data=>{ data.products.push({id:uid(), companyId, name, category}); });
+    state.sheet=null; render();
+  }
+  else if(action==="deleteProduct"){
+    const id = el.dataset.id;
+    update(data=>{ data.products = data.products.filter(p=>p.id!==id); });
+  }
+}
+
+/* ---------------- init ---------------- */
+window.addEventListener("online", ()=>{ saveState="idle"; renderTopbarIndicator(); });
+window.addEventListener("offline", ()=>{ saveState="offline"; renderTopbarIndicator(); });
+
+render();
+
+if("serviceWorker" in navigator){
+  window.addEventListener("load", ()=>{
+    navigator.serviceWorker.register("sw.js").catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
